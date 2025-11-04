@@ -26,7 +26,7 @@ class ServiceTicket(Base):
     __tablename__ = 'service_tickets'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    customer_id: Mapped[int] = mapped_column(db.ForeignKey('customers.id'))
+    customer_id: Mapped[int] = mapped_column(db.ForeignKey('customers.id'), nullable=False)
     vehicle_info: Mapped[str] = mapped_column(db.String(255), nullable=False)
     service_date: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(db.String(50), nullable=False)

@@ -1,8 +1,8 @@
 from marshmallow import ValidationError
 from flask import request, jsonify
-from sqlalchemy import select
+from sqlalchemy import select, func, desc
 from .schemas import mechanic_schema, mechanics_schema
-from app.models import Mechanic, db
+from app.models import Mechanic, db, service_mechanic
 from . import mechanics_bp
 
 
@@ -57,6 +57,7 @@ def update_mechanic(mechanic_id):
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200
 
+
 #DELETE SPECIFIC MECHANIC
 @mechanics_bp.route("/<int:mechanic_id>", methods=['DELETE'])
 def delete_mechanic(mechanic_id):
@@ -73,3 +74,26 @@ def delete_mechanic(mechanic_id):
     except Exception as e:
         print(f'error deleting mechanic: {e}')
         return jsonify({"error": 'internal server error'}), 500
+    
+# SORT MECHANICS BY MOST TICKETS WORKED ON
+@mechanics_bp.route("/popular", methods=['GET'])
+def popular_mechanics():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+
+    mechanics.sort(key=lambda mechanic: len(mechanic.service_tickets), reverse=True)
+
+    return mechanics_schema.jsonify(mechanics), 200
+
+# GET MOST ACTIVE MECHANIC
+@mechanics_bp.route("/most-active", methods=["GET"])
+def get_most_active_mechanics():
+    stmt = (
+        select(Mechanic, func.count(service_mechanic.c.service_ticket_id).label("ticket_count"))
+        .join(service_mechanic, Mechanic.id == service_mechanic.c.mechanic_id)
+        .group_by(Mechanic.id)
+        .order_by(desc("ticket_count"))
+    )
+    results = db.session.execute(stmt).all()
+    mechanics = [row[0] for row in results]
+    return mechanics_schema.jsonify(mechanics), 200

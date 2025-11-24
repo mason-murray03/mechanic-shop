@@ -19,8 +19,9 @@ class Customer(Base):
     email: Mapped[str] = mapped_column(db.String(255), unique=True, nullable=False)
     phone: Mapped[str] = mapped_column(db.String(20), nullable=False)
     address: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    password: Mapped[str] = mapped_column(db.String(255), nullable=False)
 
-    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(back_populates='customer')
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(back_populates='customer', cascade='all, delete-orphan')
 
 class ServiceTicket(Base):
     __tablename__ = 'service_tickets'
@@ -33,6 +34,7 @@ class ServiceTicket(Base):
 
     customer: Mapped["Customer"] = db.relationship(back_populates='service_tickets')
     mechanics: Mapped[List["Mechanic"]] = db.relationship(secondary='service_mechanic', back_populates='service_tickets')
+    parts: Mapped[List['Inventory']] = db.relationship(secondary='inventory_ticket', back_populates='service_tickets')
 
 
 class Mechanic(Base):
@@ -52,3 +54,22 @@ service_mechanic = db.Table(
     db.Column('service_ticket_id', db.ForeignKey('service_tickets.id')),
     db.Column('mechanic_id', db.ForeignKey('mechanics.id'))
 )
+
+inventory_ticket = db.Table(
+    'inventory_ticket',
+    Base.metadata,
+    db.Column('inventory_id', db.ForeignKey('inventory.id')),
+    db.Column('service_ticket_id', db.ForeignKey('service_tickets.id'))
+)
+
+class Inventory(Base):
+    __tablename__ = 'inventory'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(db.String(100), nullable=False)
+    price: Mapped[float] = mapped_column(db.Float, nullable=False)
+
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(
+        secondary='inventory_ticket',
+        back_populates='parts'
+    )

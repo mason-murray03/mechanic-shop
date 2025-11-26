@@ -3,9 +3,9 @@ info:
   title: "Auto Repair Shop API"
   description: "This is an API to manage an auto repair shop"
   version: "1.0.0"
-host: "127.0.0.1:5000"
+host: "mechanic-shop-cpto.onrender.com"
 schemes:
-  - "http"
+  - "https"
 consumes:
   - "application/json"
 produces:

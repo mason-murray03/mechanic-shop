@@ -3,10 +3,11 @@ from jose import jwt, JWTError, ExpiredSignatureError
 import jose
 from functools import wraps
 from flask import request, jsonify
+import os
 
-SECRET_KEY = 'a super secret, secret key'
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'a super secret, secret key'
 
-def token_required(f):
+def token_required(f):  # checks token on protected routes
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization', None)
@@ -33,7 +34,7 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
-def encode_token(customer_id):
+def encode_token(customer_id):  # creates the toke when a user logs in
     payload = {
         'exp': datetime.now(timezone.utc) + timedelta(days=0, hours=1),  # setting the expiration time set to an hour past now
         'iat': datetime.now(timezone.utc),  # issued at time
